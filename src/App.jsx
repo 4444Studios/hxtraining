@@ -5,6 +5,7 @@ import './App.css'
 
 function App() {
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -31,6 +32,30 @@ function App() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    // Close mobile menu when clicking outside
+    const handleClickOutside = (e) => {
+      if (isMobileMenuOpen && !e.target.closest('.nav-container')) {
+        setIsMobileMenuOpen(false)
+      }
+    }
+    
+    // Close mobile menu on escape key
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isMobileMenuOpen])
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -156,11 +181,26 @@ function App() {
       <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
         <div className="nav-container">
           <div className="logo">HxTraining</div>
-          <div className="nav-links">
-            <a href="#about">About</a>
-            <a href="#services">Services</a>
-            <a href="#contact">Contact</a>
-            <a href="https://www.instagram.com/hxtraining_/?hl=en" target="_blank" rel="noopener noreferrer" className="instagram-link">
+          <button 
+            className={`mobile-menu-toggle ${isMobileMenuOpen ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          {isMobileMenuOpen && (
+            <div 
+              className="mobile-menu-overlay"
+              onClick={() => setIsMobileMenuOpen(false)}
+            ></div>
+          )}
+          <div className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+            <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>About</a>
+            <a href="#services" onClick={() => setIsMobileMenuOpen(false)}>Services</a>
+            <a href="#contact" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
+            <a href="https://www.instagram.com/hxtraining_/?hl=en" target="_blank" rel="noopener noreferrer" className="instagram-link" onClick={() => setIsMobileMenuOpen(false)}>
               Instagram
             </a>
           </div>
@@ -186,7 +226,6 @@ function App() {
         <div className="section-container">
           <div className="about-wrapper">
             <div className="about-content">
-              <div className="section-number">01</div>
               <h2 className="section-title">About</h2>
               <div className="about-text">
                 <p className="large-text">
@@ -212,27 +251,22 @@ function App() {
       <section id="services" className="services">
         <div className="section-container">
           <div className="section-header">
-            <div className="section-number">02</div>
             <h2 className="section-title">Services</h2>
           </div>
           <div className="services-grid">
             <div className="service-card">
-              <div className="service-number">01</div>
               <h3>Virtual One-on-One Coaching</h3>
               <p>Personalized virtual training sessions tailored to your goals, fitness level, and schedule. Real-time guidance and support from anywhere in the world.</p>
             </div>
             <div className="service-card">
-              <div className="service-number">02</div>
               <h3>Custom Workout Programs</h3>
               <p>Tailored training programs designed specifically for your goals, equipment availability, and lifestyle. Delivered digitally with detailed instructions and video demonstrations.</p>
             </div>
             <div className="service-card">
-              <div className="service-number">03</div>
               <h3>Personalized Meal Plans</h3>
               <p>Custom nutrition plans crafted to your dietary preferences, goals, and lifestyle. Complete with meal prep guides, shopping lists, and macro tracking support.</p>
             </div>
             <div className="service-card">
-              <div className="service-number">04</div>
               <h3>Online Coaching & Support</h3>
               <p>Comprehensive virtual coaching with regular check-ins, progress tracking, form reviews, and continuous accountability—all accessible through our digital platform.</p>
             </div>
@@ -255,7 +289,6 @@ function App() {
       <section id="contact" className="contact">
         <div className="section-container">
           <div className="contact-content">
-            <div className="section-number">03</div>
             <h2 className="section-title">Get Started</h2>
             <p className="contact-description">
               Ready to begin your virtual transformation? Fill out the form below and let's discuss how we can help you achieve your goals through personalized online coaching.
