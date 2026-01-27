@@ -11,7 +11,9 @@ function App() {
     firstName: '',
     lastName: '',
     location: '',
-    instagramPhone: '',
+    location: '',
+    phoneNumber: '',
+    instagramHandle: '',
     fitnessGoal: '',
     pastAttempts: '',
     medicalConditions: '',
@@ -45,6 +47,67 @@ function App() {
   }, [])
 
   useEffect(() => {
+    // Check localStorage first
+    const savedData = localStorage.getItem('hxTrainingForm')
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData)
+        setFormData(parsed)
+      } catch (e) {
+        console.error('Error parsing saved form data', e)
+        localStorage.removeItem('hxTrainingForm')
+      }
+    } else {
+      // Set default start date to next Monday if no saved date
+      const today = new Date()
+      const dayOfWeek = today.getDay()
+      const daysUntilMonday = (8 - dayOfWeek) % 7 || 7 // Ensure it's next week if today is Monday
+      const nextMonday = new Date(today)
+      nextMonday.setDate(today.getDate() + daysUntilMonday)
+
+      const formattedDate = nextMonday.toISOString().split('T')[0]
+
+      setFormData(prev => ({
+        ...prev,
+        startDate: formattedDate
+      }))
+    }
+  }, [])
+
+  // Auto-save form data to localStorage
+  useEffect(() => {
+    // Debounce saving to avoid too many writes
+    const timeoutId = setTimeout(() => {
+      // Don't save if empty (initial state) or if currently submitting
+      if (formData.firstName || formData.lastName || formData.phoneNumber || formData.services.length > 0) {
+        localStorage.setItem('hxTrainingForm', JSON.stringify(formData))
+      }
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [formData])
+
+  useEffect(() => {
+    // Autofill location based on IP
+    const fetchLocation = async () => {
+      try {
+        const response = await fetch('https://ipapi.co/json/')
+        const data = await response.json()
+        if (data.city && data.region) {
+          setFormData(prev => ({
+            ...prev,
+            location: `${data.city}, ${data.region}`
+          }))
+        }
+      } catch (error) {
+        console.log('Could not autofill location', error)
+      }
+    }
+
+    if (!formData.location) {
+      fetchLocation()
+    }
+
     // Close mobile menu when clicking outside
     const handleClickOutside = (e) => {
       if (isMobileMenuOpen && !e.target.closest('.nav-container')) {
@@ -68,6 +131,30 @@ function App() {
     }
   }, [isMobileMenuOpen])
 
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active')
+        }
+      })
+    }, observerOptions)
+
+    const hiddenElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale')
+    hiddenElements.forEach((el) => observer.observe(el))
+
+    return () => {
+      hiddenElements.forEach((el) => observer.unobserve(el))
+    }
+  }, [])
+
+
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
 
@@ -80,6 +167,18 @@ function App() {
             : prev[name].filter(item => item !== value)
         }))
       }
+    } else if (name === 'phoneNumber') {
+      // Auto-format phone numbers
+      let val = value
+
+      // Strip all non-numeric chars except + and space
+      if (/^[\d+\s()-]*$/.test(val)) {
+        // Simple US format logic if needed, or just allow common chars
+        // For now just allow what they type but maybe strip invalid chars if needed
+        // Keeping it simple: allow user input, but validation will check length/content if needed
+      }
+
+      setFormData(prev => ({ ...prev, [name]: val }))
     } else {
       setFormData(prev => ({
         ...prev,
@@ -102,11 +201,12 @@ function App() {
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required'
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required'
     if (!formData.location.trim()) newErrors.location = 'Location is required'
-    if (!formData.instagramPhone.trim()) newErrors.instagramPhone = 'Instagram @ & Phone Number is required'
+    if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone Number is required'
     if (!formData.commitment) newErrors.commitment = 'Please confirm your commitment'
     if (formData.availableDays.length === 0) newErrors.availableDays = 'Please select at least one day'
     if (!formData.daysPerWeek) newErrors.daysPerWeek = 'Please select days per week'
     if (!formData.startDate) newErrors.startDate = 'Please select a start date'
+    if (formData.services.length === 0) newErrors.services = 'Please select at least one service'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -142,7 +242,8 @@ function App() {
         lastName: formData.lastName,
         fullName: `${formData.firstName} ${formData.lastName}`,
         location: formData.location,
-        instagramPhone: formData.instagramPhone,
+        // Combine phone and insta for the existing email template field
+        instagramPhone: `Phone: ${formData.phoneNumber}${formData.instagramHandle ? ` | IG: ${formData.instagramHandle}` : ''}`,
         fitnessGoal: formData.fitnessGoal || 'Not specified',
         pastAttempts: formData.pastAttempts || 'Not specified',
         medicalConditions: formData.medicalConditions || 'None',
@@ -160,7 +261,7 @@ function App() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         location: formData.location,
-        instagramPhone: formData.instagramPhone,
+        instagramPhone: `Phone: ${formData.phoneNumber}${formData.instagramHandle ? ` | IG: ${formData.instagramHandle}` : ''}`,
         fitnessGoal: formData.fitnessGoal || '',
         pastAttempts: formData.pastAttempts || '',
         medicalConditions: formData.medicalConditions || '',
@@ -200,6 +301,7 @@ function App() {
       await Promise.all(promises)
 
       setSubmitted(true)
+      localStorage.removeItem('hxTrainingForm') // Clear saved data on success
 
       // Reset form after 3 seconds
       setTimeout(() => {
@@ -207,7 +309,8 @@ function App() {
           firstName: '',
           lastName: '',
           location: '',
-          instagramPhone: '',
+          phoneNumber: '',
+          instagramHandle: '',
           fitnessGoal: '',
           pastAttempts: '',
           medicalConditions: '',
@@ -226,12 +329,14 @@ function App() {
       if (error.message && error.message.includes('SheetDB')) {
         console.warn('SheetDB submission failed, but email was sent successfully')
         setSubmitted(true)
+        localStorage.removeItem('hxTrainingForm') // Clear saved data on success
         setTimeout(() => {
           setFormData({
             firstName: '',
             lastName: '',
             location: '',
-            instagramPhone: '',
+            phoneNumber: '',
+            instagramHandle: '',
             fitnessGoal: '',
             pastAttempts: '',
             medicalConditions: '',
@@ -305,17 +410,15 @@ function App() {
       <section id="about" className="about">
         <div className="section-container">
           <div className="about-wrapper">
-            <div className="about-content">
+            <div className="about-text reveal-left">
               <h2 className="section-title">About</h2>
-              <div className="about-text">
-                <p className="large-text">
-                  HX Training delivers personalized coaching designed for results. Every program is crafted around your goals,
-                  lifestyle, and performance standards; with custom workouts, strategic nutrition, and direct coach access. This is high touch
-                  coaching for those who value precision, accountability, and lasting transformation.
-                </p>
-              </div>
+              <p className="large-text">
+                HX Training delivers personalized coaching designed for results. Every program is crafted around your goals,
+                lifestyle, and performance standards; with custom workouts, strategic nutrition, and direct coach access. This is high touch
+                coaching for those who value precision, accountability, and lasting transformation.
+              </p>
             </div>
-            <div className="about-image-wrapper">
+            <div className="about-image-wrapper reveal-right">
               <img src={trainerImage} alt="Trainer" className="about-image" />
             </div>
           </div>
@@ -325,19 +428,19 @@ function App() {
       {/* Services Section */}
       <section id="services" className="services">
         <div className="section-container">
-          <div className="section-header">
+          <div className="section-header reveal">
             <h2 className="section-title">Services</h2>
           </div>
           <div className="services-grid">
-            <div className="service-card">
+            <div className="service-card reveal delay-100">
               <h3>Private In-Person Coaching</h3>
               <p>Personalized in-person training sessions tailored to your goals, fitness level, and schedule. Expect hands-on instruction, precise real-time feedback, & focused support in a private training environment.</p>
             </div>
-            <div className="service-card">
+            <div className="service-card reveal delay-200">
               <h3>Online Coaching 1-on-1</h3>
               <p>An elevated coaching experience delivered through a personalized app. Includes custom programming, weekly check-ins, detailed progress tracking, & direct access to your coach for ongoing guidance + accountability.</p>
             </div>
-            <div className="service-card">
+            <div className="service-card reveal delay-300">
               <h3>Custom Meal Plan + Supplement Advice</h3>
               <p>Custom nutrition plans crafted to your dietary preferences, goals, and lifestyle. All programs include a custom meal guide & strategic supplement recommendations to support performance, recovery, and long-term results.</p>
             </div>
@@ -348,7 +451,7 @@ function App() {
       {/* Philosophy Section */}
       <section className="philosophy">
         <div className="philosophy-content">
-          <div className="philosophy-text">
+          <div className="philosophy-text reveal-scale">
             <h2>ELITE</h2>
             <h2>LIFESTYLE</h2>
             <h2>TRAINING</h2>
@@ -359,7 +462,7 @@ function App() {
       {/* Contact Section */}
       <section id="contact" className="contact">
         <div className="section-container">
-          <div className="contact-content">
+          <div className="contact-content reveal">
             <h2 className="section-title">Get Started</h2>
             <p className="contact-description">
               Ready to begin your transformation? Fill out the form below and let's discuss how we can help you achieve your goals through personalized online coaching.
@@ -421,21 +524,37 @@ function App() {
                   {errors.location && <span className="error-message">{errors.location}</span>}
                 </div>
 
-                {/* Instagram & Phone */}
-                <div className="form-group">
-                  <label htmlFor="instagramPhone">
-                    What is your Instagram @ & Phone Number? <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="instagramPhone"
-                    name="instagramPhone"
-                    placeholder="@username & Phone Number"
-                    value={formData.instagramPhone}
-                    onChange={handleInputChange}
-                    className={errors.instagramPhone ? 'error' : ''}
-                  />
-                  {errors.instagramPhone && <span className="error-message">{errors.instagramPhone}</span>}
+                {/* Phone Number & Instagram */}
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="phoneNumber">
+                      Phone Number <span className="required">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      id="phoneNumber"
+                      name="phoneNumber"
+                      placeholder="(555) 555-5555"
+                      value={formData.phoneNumber}
+                      onChange={handleInputChange}
+                      className={errors.phoneNumber ? 'error' : ''}
+                    />
+                    {errors.phoneNumber && <span className="error-message">{errors.phoneNumber}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="instagramHandle">
+                      Instagram Handle <span className="optional">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="instagramHandle"
+                      name="instagramHandle"
+                      placeholder="@username"
+                      value={formData.instagramHandle}
+                      onChange={handleInputChange}
+                    />
+                  </div>
                 </div>
 
                 {/* Fitness Goal */}
@@ -570,7 +689,9 @@ function App() {
 
                 {/* Services */}
                 <div className="form-group">
-                  <label>Which of my services are you inquiring about?</label>
+                  <label>
+                    Which of my services are you inquiring about? <span className="required">*</span>
+                  </label>
                   <div className="checkbox-group">
                     {['1 on 1', 'Group Training', 'Online Coaching'].map(service => (
                       <label key={service} className="checkbox-label">
@@ -585,6 +706,7 @@ function App() {
                       </label>
                     ))}
                   </div>
+                  {errors.services && <span className="error-message">{errors.services}</span>}
                 </div>
 
                 {/* Reason */}
