@@ -65,6 +65,33 @@ This project uses EmailJS to handle form submissions. To set it up:
    - In your EmailJS template settings, set the "To Email" field to your email address
    - This is where all form submissions will be sent
 
+### SheetDB Configuration (Google Sheets Integration)
+
+This project uses SheetDB to automatically save form submissions to a Google Sheet.
+
+1. **Create a Google Sheet**:
+   - Create a new Google Sheet with the following column headers (in the first row):
+     - `firstName`, `lastName`, `location`, `instagramPhone`, `fitnessGoal`, `pastAttempts`, `medicalConditions`, `commitment`, `availableDays`, `daysPerWeek`, `startDate`, `services`, `reason`, `timestamp`
+   - Make sure the sheet is publicly accessible (or set up proper permissions)
+
+2. **Set up SheetDB**:
+   - Go to [https://sheetdb.io/](https://sheetdb.io/)
+   - Sign up for a free account
+   - Click "Create API" and connect your Google Sheet
+   - Copy the API URL (it will look like: `https://sheetdb.io/api/v1/YOUR_SHEET_ID`)
+
+3. **Add SheetDB URL to Environment**:
+   - Add to your `.env` file:
+     ```
+     VITE_SHEETDB_URL=https://sheetdb.io/api/v1/YOUR_SHEET_ID
+     ```
+   - Note: SheetDB URL is optional. If not provided, form will still work with EmailJS only
+
+4. **Test the Integration**:
+   - Submit a test form
+   - Check your Google Sheet to verify the data was added
+   - Check your email for the notification
+
 ### Running the Development Server
 
 ```bash

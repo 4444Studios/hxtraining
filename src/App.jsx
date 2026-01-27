@@ -40,7 +40,7 @@ function App() {
         setIsMobileMenuOpen(false)
       }
     }
-    
+
     // Close mobile menu on escape key
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isMobileMenuOpen) {
@@ -50,7 +50,7 @@ function App() {
 
     document.addEventListener('mousedown', handleClickOutside)
     document.addEventListener('keydown', handleEscape)
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('keydown', handleEscape)
@@ -59,7 +59,7 @@ function App() {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
-    
+
     if (type === 'checkbox') {
       if (name === 'availableDays' || name === 'services') {
         setFormData(prev => ({
@@ -75,7 +75,7 @@ function App() {
         [name]: value
       }))
     }
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -87,7 +87,7 @@ function App() {
 
   const validateForm = () => {
     const newErrors = {}
-    
+
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required'
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required'
     if (!formData.location.trim()) newErrors.location = 'Location is required'
@@ -96,14 +96,14 @@ function App() {
     if (formData.availableDays.length === 0) newErrors.availableDays = 'Please select at least one day'
     if (!formData.daysPerWeek) newErrors.daysPerWeek = 'Please select days per week'
     if (!formData.startDate) newErrors.startDate = 'Please select a start date'
-    
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
@@ -125,7 +125,7 @@ function App() {
       // Initialize EmailJS with public key
       emailjs.init(publicKey)
 
-      // Prepare template parameters
+      // Prepare template parameters for EmailJS
       const templateParams = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -143,11 +143,53 @@ function App() {
         reason: formData.reason || 'Not specified',
       }
 
-      // Send email
-      await emailjs.send(serviceId, templateId, templateParams)
+      // Prepare data for SheetDB (Google Sheet)
+      const sheetDbUrl = import.meta.env.VITE_SHEETDB_URL
+      const sheetData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        location: formData.location,
+        instagramPhone: formData.instagramPhone,
+        fitnessGoal: formData.fitnessGoal || '',
+        pastAttempts: formData.pastAttempts || '',
+        medicalConditions: formData.medicalConditions || '',
+        commitment: formData.commitment === 'yes' ? 'Yes' : 'No',
+        availableDays: formData.availableDays.join(', ') || '',
+        daysPerWeek: formData.daysPerWeek || '',
+        startDate: formData.startDate || '',
+        services: formData.services.join(', ') || '',
+        reason: formData.reason || '',
+        timestamp: new Date().toISOString(),
+      }
+
+      // Send email via EmailJS and save to Google Sheet via SheetDB in parallel
+      const promises = [
+        emailjs.send(serviceId, templateId, templateParams)
+      ]
+
+      // Add SheetDB request if URL is configured
+      if (sheetDbUrl) {
+        promises.push(
+          fetch(sheetDbUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(sheetData),
+          }).then(response => {
+            if (!response.ok) {
+              throw new Error('SheetDB request failed')
+            }
+            return response.json()
+          })
+        )
+      }
+
+      // Wait for both requests to complete
+      await Promise.all(promises)
 
       setSubmitted(true)
-      
+
       // Reset form after 3 seconds
       setTimeout(() => {
         setFormData({
@@ -168,8 +210,32 @@ function App() {
         setSubmitted(false)
       }, 3000)
     } catch (error) {
-      console.error('EmailJS error:', error)
-      alert('Failed to send your message. Please try again or contact us directly.')
+      console.error('Form submission error:', error)
+      // Still show success if EmailJS worked, even if SheetDB failed
+      if (error.message && error.message.includes('SheetDB')) {
+        console.warn('SheetDB submission failed, but email was sent successfully')
+        setSubmitted(true)
+        setTimeout(() => {
+          setFormData({
+            firstName: '',
+            lastName: '',
+            location: '',
+            instagramPhone: '',
+            fitnessGoal: '',
+            pastAttempts: '',
+            medicalConditions: '',
+            commitment: '',
+            availableDays: [],
+            daysPerWeek: '',
+            startDate: '',
+            services: [],
+            reason: ''
+          })
+          setSubmitted(false)
+        }, 3000)
+      } else {
+        alert('Failed to send your message. Please try again or contact us directly.')
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -181,7 +247,7 @@ function App() {
       <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
         <div className="nav-container">
           <div className="logo">HxTraining</div>
-          <button 
+          <button
             className={`mobile-menu-toggle ${isMobileMenuOpen ? 'active' : ''}`}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
@@ -191,7 +257,7 @@ function App() {
             <span></span>
           </button>
           {isMobileMenuOpen && (
-            <div 
+            <div
               className="mobile-menu-overlay"
               onClick={() => setIsMobileMenuOpen(false)}
             ></div>
@@ -229,14 +295,13 @@ function App() {
               <h2 className="section-title">About</h2>
               <div className="about-text">
                 <p className="large-text">
-                  HxTraining is more than fitness—it's a philosophy. We believe in pushing boundaries, 
+                  HxTraining is more than fitness—it's a philosophy. We believe in pushing boundaries,
                   breaking limits, and discovering the strength within, all from the comfort of your own space.
                 </p>
                 <p>
-                  Our virtual coaching approach combines cutting-edge training methodologies with personalized 
-                  attention to help you achieve results that extend far beyond physical transformation. Through 
-                  custom workout programs, personalized meal plans, and dedicated online support, we craft a 
-                  comprehensive journey designed to challenge, inspire, and transform—no matter where you are.
+                  HX Training delivers personalized coaching designs for results. Every program is crafted around your goals,
+                  lifestyle, and performance standards; with custom workouts, strategic nutrition, and direct coach access. This is high touch
+                  coaching for those who value precision, accountability, and lasting transformation.
                 </p>
               </div>
             </div>
@@ -255,20 +320,16 @@ function App() {
           </div>
           <div className="services-grid">
             <div className="service-card">
-              <h3>Virtual One-on-One Coaching</h3>
-              <p>Personalized virtual training sessions tailored to your goals, fitness level, and schedule. Real-time guidance and support from anywhere in the world.</p>
+              <h3>Private In-Person Coaching</h3>
+              <p>Personalized in-person training sessions tailored to your goals, fitness level, and schedule. Expect hands-on instruction, precise real-time feedback, & focused support in a private training environment.</p>
             </div>
             <div className="service-card">
-              <h3>Custom Workout Programs</h3>
-              <p>Tailored training programs designed specifically for your goals, equipment availability, and lifestyle. Delivered digitally with detailed instructions and video demonstrations.</p>
+              <h3>Online Coaching 1-on-1</h3>
+              <p>An elevated coaching experience delivered through a personalized app. Includes custom programming, weekly check-ins, detailed progress tracking, & direct access to your coach for ongoing guidance + accountability.</p>
             </div>
             <div className="service-card">
-              <h3>Personalized Meal Plans</h3>
-              <p>Custom nutrition plans crafted to your dietary preferences, goals, and lifestyle. Complete with meal prep guides, shopping lists, and macro tracking support.</p>
-            </div>
-            <div className="service-card">
-              <h3>Online Coaching & Support</h3>
-              <p>Comprehensive virtual coaching with regular check-ins, progress tracking, form reviews, and continuous accountability—all accessible through our digital platform.</p>
+              <h3>Custom Meal Plan + Supplement Advice</h3>
+              <p>Custom nutrition plans crafted to your dietary preferences, goals, and lifestyle. All programs include a custom meal guide & strategic supplement recommendations to support performance, recovery, and long-term results.</p>
             </div>
           </div>
         </div>
@@ -291,9 +352,9 @@ function App() {
           <div className="contact-content">
             <h2 className="section-title">Get Started</h2>
             <p className="contact-description">
-              Ready to begin your virtual transformation? Fill out the form below and let's discuss how we can help you achieve your goals through personalized online coaching.
+              Ready to begin your transformation? Fill out the form below and let's discuss how we can help you achieve your goals through personalized online coaching.
             </p>
-            
+
             {submitted ? (
               <div className="form-success">
                 <h3>Thank you for your interest!</h3>
