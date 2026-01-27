@@ -6,6 +6,7 @@ import './App.css'
 function App() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [showFloatingCta, setShowFloatingCta] = useState(false)
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -28,6 +29,16 @@ function App() {
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
+      // Show floating CTA after scrolling past hero, hide near contact section
+      const contactSection = document.getElementById('contact')
+      const heroHeight = window.innerHeight
+      const contactTop = contactSection?.offsetTop || Infinity
+      const scrollPosition = window.scrollY + window.innerHeight
+
+      setShowFloatingCta(
+        window.scrollY > heroHeight * 0.5 &&
+        scrollPosition < contactTop + 100
+      )
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
@@ -269,6 +280,9 @@ function App() {
             <a href="https://www.instagram.com/hxtraining_/?hl=en" target="_blank" rel="noopener noreferrer" className="instagram-link" onClick={() => setIsMobileMenuOpen(false)}>
               Instagram
             </a>
+            <a href="#contact" className="nav-cta-button" onClick={() => setIsMobileMenuOpen(false)}>
+              Get Started →
+            </a>
           </div>
         </div>
       </nav>
@@ -281,7 +295,7 @@ function App() {
             <span className="line">Your Body</span>
             <span className="line">Transform Your Life</span>
           </h1>
-          <p className="hero-subtitle">Virtual Coaching & Transformation</p>
+          <p className="hero-subtitle">Personalized Coaching & Transformation</p>
           <a href="#contact" className="cta-button">Begin Your Journey</a>
         </div>
         <div className="hero-overlay"></div>
@@ -295,11 +309,7 @@ function App() {
               <h2 className="section-title">About</h2>
               <div className="about-text">
                 <p className="large-text">
-                  HxTraining is more than fitness—it's a philosophy. We believe in pushing boundaries,
-                  breaking limits, and discovering the strength within, all from the comfort of your own space.
-                </p>
-                <p>
-                  HX Training delivers personalized coaching designs for results. Every program is crafted around your goals,
+                  HX Training delivers personalized coaching designed for results. Every program is crafted around your goals,
                   lifestyle, and performance standards; with custom workouts, strategic nutrition, and direct coach access. This is high touch
                   coaching for those who value precision, accountability, and lasting transformation.
                 </p>
@@ -599,13 +609,22 @@ function App() {
         </div>
       </section>
 
+      {/* Floating Mobile CTA */}
+      <a
+        href="#contact"
+        className={`floating-cta ${showFloatingCta ? '' : 'hidden'}`}
+        aria-label="Get Started"
+      >
+        Start Your Journey →
+      </a>
+
       {/* Footer */}
       <footer className="footer">
         <div className="footer-content">
           <div className="footer-brand">HxTraining</div>
           <div className="footer-links">
             <a href="https://www.instagram.com/hxtraining_/?hl=en" target="_blank" rel="noopener noreferrer">Instagram</a>
-            <span>© 2024</span>
+            <span>© 2026</span>
           </div>
         </div>
       </footer>
