@@ -1,22 +1,5 @@
-@font-face {
-  font-family: 'Akira Expanded';
-  src: url('./assets/fonts/AkiraExpanded.woff2') format('woff2'),
-    url('./assets/fonts/AkiraExpanded.woff') format('woff'),
-    url('./assets/fonts/AkiraExpanded.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Akira Expanded';
-  src: url('./assets/fonts/AkiraExpanded-Bold.woff2') format('woff2'),
-    url('./assets/fonts/AkiraExpanded-Bold.woff') format('woff'),
-    url('./assets/fonts/AkiraExpanded-Bold.ttf') format('truetype');
-  font-weight: bold;
-  font-style: normal;
-  font-display: swap;
-}
+/* Font face removed: Akira Expanded was missing and causing inconsistencies. 
+   Replacing with Inter from Google Fonts to match user preference for system-like bold sans-serif. */
 
 * {
   margin: 0;
@@ -256,7 +239,8 @@
   letter-spacing: 0.05em;
   line-height: 1.1;
   margin-bottom: 2rem;
-  font-family: 'Akira Expanded', sans-serif;
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
   text-transform: uppercase;
 }
 
@@ -368,7 +352,8 @@
   font-weight: bold;
   letter-spacing: 0.05em;
   margin-bottom: 4rem;
-  font-family: 'Akira Expanded', sans-serif;
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
   text-transform: uppercase;
 }
 
