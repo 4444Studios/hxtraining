@@ -11,7 +11,6 @@ function App() {
     firstName: '',
     lastName: '',
     location: '',
-    location: '',
     phoneNumber: '',
     instagramHandle: '',
     fitnessGoal: '',
