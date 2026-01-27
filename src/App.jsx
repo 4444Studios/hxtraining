@@ -1,11 +1,154 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import emailjs from '@emailjs/browser'
 import trainerImage from './assets/Trainer.png'
 import './App.css'
 
+// Dummy testimonials data
+const testimonials = [
+  {
+    id: 1,
+    name: "Marcus Johnson",
+    achievement: "Lost 45 lbs in 4 months",
+    quote: "HxTraining completely changed my approach to fitness. The personalized attention and strategic programming helped me achieve results I never thought possible. Best investment I've ever made in myself.",
+    rating: 5
+  },
+  {
+    id: 2,
+    name: "Sarah Mitchell",
+    achievement: "Gained lean muscle & confidence",
+    quote: "After years of inconsistent gym routines, working with HxTraining gave me the structure and accountability I needed. The custom meal plans and workout tracking made all the difference.",
+    rating: 5
+  },
+  {
+    id: 3,
+    name: "David Chen",
+    achievement: "Dropped 3 pant sizes",
+    quote: "The online coaching exceeded my expectations. Real-time feedback, weekly check-ins, and a coach who actually cares about my progress. This is elite-level training made accessible.",
+    rating: 5
+  },
+  {
+    id: 4,
+    name: "Jessica Williams",
+    achievement: "Competition ready in 12 weeks",
+    quote: "I came to HxTraining wanting to compete. The detailed programming and nutrition guidance got me stage-ready. Couldn't have done it without this level of expertise.",
+    rating: 5
+  }
+]
+
+// Dummy transformation results
+const transformations = [
+  {
+    id: 1,
+    name: "Mike R.",
+    duration: "16 weeks",
+    weightLost: "52 lbs",
+    metric: "Body fat: 28% → 14%"
+  },
+  {
+    id: 2,
+    name: "Amanda L.",
+    duration: "12 weeks",
+    weightLost: "28 lbs",
+    metric: "Muscle gain: +8 lbs"
+  },
+  {
+    id: 3,
+    name: "Carlos M.",
+    duration: "20 weeks",
+    weightLost: "65 lbs",
+    metric: "Waist: 42in to 34in"
+  }
+]
+
+// Pricing packages
+const packages = [
+  {
+    id: 1,
+    name: "Online Coaching",
+    price: "199",
+    period: "/month",
+    description: "Custom programming delivered through our app",
+    features: [
+      "Personalized workout plans",
+      "Custom meal guide",
+      "Weekly check-ins",
+      "Progress tracking",
+      "Direct messaging support",
+      "Video form reviews"
+    ],
+    popular: false
+  },
+  {
+    id: 2,
+    name: "1-on-1 Training",
+    price: "399",
+    period: "/month",
+    description: "Premium in-person training experience",
+    features: [
+      "4 private sessions/month",
+      "Full nutrition planning",
+      "Supplement protocol",
+      "Unlimited messaging",
+      "Priority scheduling",
+      "Body composition tracking",
+      "Goal setting workshops"
+    ],
+    popular: true
+  },
+  {
+    id: 3,
+    name: "Elite Package",
+    price: "699",
+    period: "/month",
+    description: "Complete transformation program",
+    features: [
+      "8 private sessions/month",
+      "Daily nutrition coaching",
+      "24/7 coach access",
+      "Weekly progress calls",
+      "Competition prep available",
+      "Recovery protocols",
+      "Lifestyle optimization",
+      "VIP scheduling"
+    ],
+    popular: false
+  }
+]
+
+// FAQ data
+const faqs = [
+  {
+    id: 1,
+    question: "What's included in the 60-day commitment?",
+    answer: "The 60-day commitment includes your personalized training program, nutrition guidance, weekly check-ins, and direct coach access. This timeframe allows us to properly assess your progress and make necessary adjustments for optimal results."
+  },
+  {
+    id: 2,
+    question: "Do I need gym access for online coaching?",
+    answer: "Not necessarily. We can design programs for home workouts, gym training, or a hybrid approach. During your consultation, we'll discuss your available equipment and create a program that fits your situation."
+  },
+  {
+    id: 3,
+    question: "How are the meal plans customized?",
+    answer: "Your meal plan is built around your dietary preferences, allergies, lifestyle, and goals. Whether you're vegan, keto, or have specific restrictions, we create a sustainable nutrition strategy that works for you."
+  },
+  {
+    id: 4,
+    question: "What happens after the initial 60 days?",
+    answer: "After your initial commitment, you can continue month-to-month or sign up for another transformation phase. Most clients see such strong results that they choose to continue their journey with us."
+  },
+  {
+    id: 5,
+    question: "How do I track my workouts?",
+    answer: "Online coaching clients receive access to our training app where all workouts are logged. You'll track sets, reps, and weights while your coach monitors progress and makes real-time adjustments."
+  }
+]
+
 function App() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [currentTestimonial, setCurrentTestimonial] = useState(0)
+  const [openFaq, setOpenFaq] = useState(null)
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -25,12 +168,54 @@ function App() {
   const [submitted, setSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Refs for scroll animations
+  const aboutRef = useRef(null)
+  const servicesRef = useRef(null)
+  const testimonialsRef = useRef(null)
+  const resultsRef = useRef(null)
+  const pricingRef = useRef(null)
+  const faqRef = useRef(null)
+  const contactRef = useRef(null)
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Intersection Observer for scroll animations
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-in')
+        }
+      })
+    }, observerOptions)
+
+    const refs = [aboutRef, servicesRef, testimonialsRef, resultsRef, pricingRef, faqRef, contactRef]
+    refs.forEach(ref => {
+      if (ref.current) {
+        observer.observe(ref.current)
+      }
+    })
+
+    return () => observer.disconnect()
+  }, [])
+
+  // Auto-rotate testimonials
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTestimonial(prev => (prev + 1) % testimonials.length)
+    }, 5000)
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -241,6 +426,10 @@ function App() {
     }
   }
 
+  const toggleFaq = (id) => {
+    setOpenFaq(openFaq === id ? null : id)
+  }
+
   return (
     <div className="app">
       {/* Navigation */}
@@ -265,6 +454,8 @@ function App() {
           <div className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
             <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>About</a>
             <a href="#services" onClick={() => setIsMobileMenuOpen(false)}>Services</a>
+            <a href="#results" onClick={() => setIsMobileMenuOpen(false)}>Results</a>
+            <a href="#pricing" onClick={() => setIsMobileMenuOpen(false)}>Pricing</a>
             <a href="#contact" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
             <a href="https://www.instagram.com/hxtraining_/?hl=en" target="_blank" rel="noopener noreferrer" className="instagram-link" onClick={() => setIsMobileMenuOpen(false)}>
               Instagram
@@ -288,7 +479,7 @@ function App() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="about">
+      <section id="about" className="about section-animate" ref={aboutRef}>
         <div className="section-container">
           <div className="about-wrapper">
             <div className="about-content">
@@ -313,7 +504,7 @@ function App() {
       </section>
 
       {/* Services Section */}
-      <section id="services" className="services">
+      <section id="services" className="services section-animate" ref={servicesRef}>
         <div className="section-container">
           <div className="section-header">
             <h2 className="section-title">Services</h2>
@@ -335,6 +526,68 @@ function App() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section id="testimonials" className="testimonials section-animate" ref={testimonialsRef}>
+        <div className="section-container">
+          <div className="section-header">
+            <h2 className="section-title">Success Stories</h2>
+          </div>
+          <div className="testimonials-carousel">
+            <div className="testimonial-card">
+              <div className="testimonial-rating">
+                {[...Array(testimonials[currentTestimonial].rating)].map((_, i) => (
+                  <span key={i} className="star">★</span>
+                ))}
+              </div>
+              <blockquote className="testimonial-quote">
+                "{testimonials[currentTestimonial].quote}"
+              </blockquote>
+              <div className="testimonial-author">
+                <div className="author-name">{testimonials[currentTestimonial].name}</div>
+                <div className="author-achievement">{testimonials[currentTestimonial].achievement}</div>
+              </div>
+            </div>
+            <div className="testimonial-dots">
+              {testimonials.map((_, index) => (
+                <button
+                  key={index}
+                  className={`dot ${index === currentTestimonial ? 'active' : ''}`}
+                  onClick={() => setCurrentTestimonial(index)}
+                  aria-label={`Go to testimonial ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Results/Transformation Section */}
+      <section id="results" className="results section-animate" ref={resultsRef}>
+        <div className="section-container">
+          <div className="section-header">
+            <h2 className="section-title">Real Results</h2>
+            <p className="section-description">Our clients achieve extraordinary transformations through dedication and expert guidance.</p>
+          </div>
+          <div className="results-grid">
+            {transformations.map((result) => (
+              <div key={result.id} className="result-card">
+                <div className="result-placeholder">
+                  <span>Before / After</span>
+                </div>
+                <div className="result-info">
+                  <h3>{result.name}</h3>
+                  <div className="result-stats">
+                    <span className="stat-item"><strong>{result.duration}</strong> program</span>
+                    <span className="stat-item"><strong>{result.weightLost}</strong> lost</span>
+                    <span className="stat-item">{result.metric}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Philosophy Section */}
       <section className="philosophy">
         <div className="philosophy-content">
@@ -346,8 +599,63 @@ function App() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="pricing section-animate" ref={pricingRef}>
+        <div className="section-container">
+          <div className="section-header">
+            <h2 className="section-title">Investment</h2>
+            <p className="section-description">Choose the coaching experience that fits your goals and lifestyle.</p>
+          </div>
+          <div className="pricing-grid">
+            {packages.map((pkg) => (
+              <div key={pkg.id} className={`pricing-card ${pkg.popular ? 'popular' : ''}`}>
+                {pkg.popular && <div className="popular-badge">Most Popular</div>}
+                <h3>{pkg.name}</h3>
+                <div className="price">
+                  <span className="currency">$</span>
+                  <span className="amount">{pkg.price}</span>
+                  <span className="period">{pkg.period}</span>
+                </div>
+                <p className="package-description">{pkg.description}</p>
+                <ul className="features-list">
+                  {pkg.features.map((feature, index) => (
+                    <li key={index}>
+                      <span className="check-icon">✓</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <a href="#contact" className="pricing-cta">Get Started</a>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="faq section-animate" ref={faqRef}>
+        <div className="section-container">
+          <div className="section-header">
+            <h2 className="section-title">FAQ</h2>
+          </div>
+          <div className="faq-list">
+            {faqs.map((faq) => (
+              <div key={faq.id} className={`faq-item ${openFaq === faq.id ? 'open' : ''}`}>
+                <button className="faq-question" onClick={() => toggleFaq(faq.id)}>
+                  {faq.question}
+                  <span className="faq-icon">{openFaq === faq.id ? '−' : '+'}</span>
+                </button>
+                <div className="faq-answer">
+                  <p>{faq.answer}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Contact Section */}
-      <section id="contact" className="contact">
+      <section id="contact" className="contact section-animate" ref={contactRef}>
         <div className="section-container">
           <div className="contact-content">
             <h2 className="section-title">Get Started</h2>
@@ -605,7 +913,7 @@ function App() {
           <div className="footer-brand">HxTraining</div>
           <div className="footer-links">
             <a href="https://www.instagram.com/hxtraining_/?hl=en" target="_blank" rel="noopener noreferrer">Instagram</a>
-            <span>© 2024</span>
+            <span>© 2026</span>
           </div>
         </div>
       </footer>
