@@ -455,6 +455,12 @@
   overflow: hidden;
 }
 
+@media (max-width: 1024px) {
+  .philosophy {
+    background-attachment: scroll;
+  }
+}
+
 .philosophy::before {
   content: '';
   position: absolute;
