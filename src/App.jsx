@@ -397,7 +397,8 @@ function App() {
           <h1 className="hero-title">
             <span className="line">Transform</span>
             <span className="line">Your Body</span>
-            <span className="line">Transform Your Life</span>
+            <span className="line">Transform</span>
+            <span className="line">Your Life.</span>
           </h1>
           <p className="hero-subtitle">Personalized Coaching & Transformation</p>
           <a href="#contact" className="cta-button">Begin Your Journey</a>
@@ -412,7 +413,7 @@ function App() {
             <div className="about-text reveal-left">
               <h2 className="section-title">About</h2>
               <p className="large-text">
-                HX Training delivers personalized coaching designed for results. Every program is crafted around your goals,
+                <span className="inline-logo">HxTraining</span> delivers personalized coaching designed for results. Every program is crafted around your goals,
                 lifestyle, and performance standards; with custom workouts, strategic nutrition, and direct coach access. This is high touch
                 coaching for those who value precision, accountability, and lasting transformation.
               </p>
