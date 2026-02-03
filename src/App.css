@@ -448,10 +448,31 @@
   background: #0a0a0a;
   color: #fff;
   padding: 6rem 0;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  overflow: hidden;
+}
+
+.philosophy::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  /* Dark overlay */
+  z-index: 1;
 }
 
 .philosophy-content {
   text-align: center;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 0 2rem;
 }
 
 .philosophy-text h2 {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import emailjs from '@emailjs/browser'
 import trainerImage from './assets/Trainer.png'
+import trainerImage2 from './assets/Trainer-2.JPEG'
 import './App.css'
 
 function App() {
@@ -449,7 +450,7 @@ function App() {
       </section>
 
       {/* Philosophy Section */}
-      <section className="philosophy">
+      <section className="philosophy" style={{ backgroundImage: `url(${trainerImage2})` }}>
         <div className="philosophy-content">
           <div className="philosophy-text reveal-scale">
             <h2>ELITE</h2>
