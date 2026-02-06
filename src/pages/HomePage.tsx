@@ -1,14 +1,36 @@
 import { useState, useEffect } from 'react'
 import emailjs from '@emailjs/browser'
-import trainerImage from './assets/Trainer.png'
-import trainerImage2 from './assets/Trainer-2.JPEG'
-import './App.css'
+import trainerImage from '../assets/Trainer.png' // Adjusted path
+import trainerImage2 from '../assets/Trainer-2.JPEG' // Adjusted path
+import Booking from '../components/Booking' // Adjusted path
+import '../App.css' // Adjusted path
 
-function App() {
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [showFloatingCta, setShowFloatingCta] = useState(false)
-  const [formData, setFormData] = useState({
+interface FormData {
+  firstName: string;
+  lastName: string;
+  location: string;
+  phoneNumber: string;
+  instagramHandle: string;
+  fitnessGoal: string;
+  pastAttempts: string;
+  medicalConditions: string;
+  commitment: string;
+  availableDays: string[];
+  daysPerWeek: string;
+  startDate: string;
+  services: string[];
+  reason: string;
+}
+
+interface FormErrors {
+  [key: string]: string;
+}
+
+function HomePage() {
+  const [isScrolled, setIsScrolled] = useState<boolean>(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false)
+  const [showFloatingCta, setShowFloatingCta] = useState<boolean>(false)
+  const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
     location: '',
@@ -24,7 +46,7 @@ function App() {
     services: [],
     reason: ''
   })
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState<FormErrors>({})
   const [submitted, setSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -109,25 +131,26 @@ function App() {
     }
 
     // Close mobile menu when clicking outside
-    const handleClickOutside = (e) => {
-      if (isMobileMenuOpen && !e.target.closest('.nav-container')) {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (isMobileMenuOpen && target && !target.closest('.nav-container')) {
         setIsMobileMenuOpen(false)
       }
     }
 
     // Close mobile menu on escape key
-    const handleEscape = (e) => {
+    const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isMobileMenuOpen) {
         setIsMobileMenuOpen(false)
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    document.addEventListener('keydown', handleEscape)
+    document.addEventListener('mousedown', handleClickOutside as any)
+    document.addEventListener('keydown', handleEscape as any)
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('keydown', handleEscape)
+      document.removeEventListener('mousedown', handleClickOutside as any)
+      document.removeEventListener('keydown', handleEscape as any)
     }
   }, [isMobileMenuOpen])
 
@@ -155,8 +178,10 @@ function App() {
 
 
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const target = e.target as HTMLInputElement;
+    const { name, value, type } = target;
+    const checked = target.checked;
 
     if (type === 'checkbox') {
       if (name === 'availableDays' || name === 'services') {
@@ -164,7 +189,7 @@ function App() {
           ...prev,
           [name]: checked
             ? [...prev[name], value]
-            : prev[name].filter(item => item !== value)
+            : prev[name].filter((item: string) => item !== value)
         }))
       }
     } else if (name === 'phoneNumber') {
@@ -196,7 +221,7 @@ function App() {
   }
 
   const validateForm = () => {
-    const newErrors = {}
+    const newErrors: FormErrors = {}
 
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required'
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required'
@@ -212,7 +237,7 @@ function App() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!validateForm()) {
@@ -323,7 +348,7 @@ function App() {
         })
         setSubmitted(false)
       }, 3000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Form submission error:', error)
       // Still show success if EmailJS worked, even if SheetDB failed
       if (error.message && error.message.includes('SheetDB')) {
@@ -460,6 +485,9 @@ function App() {
         </div>
       </section>
 
+      {/* Booking Section */}
+      <Booking />
+
       {/* Contact Section */}
       <section id="contact" className="contact">
         <div className="section-container">
@@ -567,7 +595,7 @@ function App() {
                     placeholder="Tell us about your fitness goals..."
                     value={formData.fitnessGoal}
                     onChange={handleInputChange}
-                    rows="3"
+                    rows={3}
                   />
                 </div>
 
@@ -580,7 +608,7 @@ function App() {
                     placeholder="Share your past experiences..."
                     value={formData.pastAttempts}
                     onChange={handleInputChange}
-                    rows="3"
+                    rows={3}
                   />
                 </div>
 
@@ -593,7 +621,7 @@ function App() {
                     placeholder="Please share any relevant medical information..."
                     value={formData.medicalConditions}
                     onChange={handleInputChange}
-                    rows="3"
+                    rows={3}
                   />
                 </div>
 
@@ -719,7 +747,7 @@ function App() {
                     placeholder="Tell us what inspired you to reach out..."
                     value={formData.reason}
                     onChange={handleInputChange}
-                    rows="4"
+                    rows={4}
                   />
                 </div>
 
@@ -755,4 +783,4 @@ function App() {
   )
 }
 
-export default App
+export default HomePage
