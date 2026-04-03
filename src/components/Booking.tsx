@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { format, isSameDay, isBefore, startOfDay } from 'date-fns';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import '../App.css';
@@ -55,18 +56,18 @@ export default function Booking() {
 
     // Initial Fetch
     useEffect(() => {
-        fetch('/api/trainers')
-            .then(res => res.json())
-            .then(data => {
-                setTrainers(data);
-                if (data.length > 0) {
-                    setSelectedTrainer(data[0]);
-                    if (data[0].services && data[0].services.length > 0) {
-                        setSelectedService(data[0].services[0]);
-                    }
+        supabase
+            .from('trainers')
+            .select('id, name, photo_url, services')
+            .then(({ data, error }) => {
+                if (error) { console.error('Error fetching trainers:', error); return; }
+                if (data && data.length > 0) {
+                    const mapped = data.map((t: any) => ({ ...t, photoUrl: t.photo_url }));
+                    setTrainers(mapped);
+                    setSelectedTrainer(mapped[0]);
+                    if (mapped[0].services?.length > 0) setSelectedService(mapped[0].services[0]);
                 }
-            })
-            .catch(err => console.error('Error fetching trainers:', err));
+            });
     }, []);
 
     // Fetch availability when Trainer Changes or Week Changes
@@ -79,9 +80,7 @@ export default function Booking() {
     const fetchWeeklyAvailability = async () => {
         if (!selectedTrainer) return;
 
-        // Calculate week start (Sunday or Monday, let's go with today's week start)
         const start = startOfDay(currentDate);
-        // Align to Sunday start
         const day = start.getDay();
         const diff = start.getDate() - day;
         const weekStart = new Date(start.setDate(diff));
@@ -92,22 +91,17 @@ export default function Booking() {
         const eStr = format(weekEnd, 'yyyy-MM-dd');
 
         try {
-            const res = await fetch(`/api/availability/taken?trainerId=${selectedTrainer.id}&startDate=${sStr}&endDate=${eStr}`);
+            // Use query params via direct URL since Edge Function is a GET request
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+            const res = await fetch(
+                `${supabaseUrl}/functions/v1/get-availability?trainerId=${selectedTrainer.id}&startDate=${sStr}&endDate=${eStr}`,
+                { headers: { 'apikey': anonKey, 'Authorization': `Bearer ${anonKey}` } }
+            );
+
             if (res.ok) {
-                const data = await res.json();
-
-                // --- DUMMY DATA FOR TESTING (USER REQUEST) ---
-                // Add some fake taken slots for the current week to visualize booked slots
-                const dummyTaken = [];
-                // Let's mark today at 10:00 AM and tomorrow at 2:00 PM as taken
-                const today = new Date();
-                const t1 = new Date(today); t1.setHours(10, 0, 0, 0);
-                const t2 = new Date(today); t2.setDate(t2.getDate() + 1); t2.setHours(14, 30, 0, 0);
-
-                dummyTaken.push(t1.toISOString());
-                dummyTaken.push(t2.toISOString());
-
-                setTakenSlots([...data.taken, ...dummyTaken]);
+                const json = await res.json();
+                setTakenSlots(json.taken || []);
             }
         } catch (error) {
             console.error('Error fetching slots', error);
@@ -128,17 +122,12 @@ export default function Booking() {
                 clientPhoneNumber: clientDetails.phoneNumber
             };
 
-            const res = await fetch('/api/sessions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            const { error } = await supabase.functions.invoke('create-booking', {
+                body: payload,
             });
 
-            if (res.ok) {
-                setBookingStatus('success');
-            } else {
-                setBookingStatus('error');
-            }
+            if (error) throw error;
+            setBookingStatus('success');
         } catch (error) {
             console.error('Booking failed', error);
             setBookingStatus('error');

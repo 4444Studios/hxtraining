@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
 
 interface Availability {
     [day: string]: string[];
@@ -24,13 +25,14 @@ function AvailabilityPage() {
     useEffect(() => {
         const fetchTrainer = async () => {
             try {
-                const token = localStorage.getItem('adminToken')
-                const response = await fetch(`http://localhost:3005/api/trainers/${TRAINER_ID}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-                if (response.ok) {
-                    const data = await response.json()
-                    setTrainer(data)
+                const { data, error } = await supabase
+                    .from('trainers')
+                    .select('id, name, availability')
+                    .eq('id', TRAINER_ID)
+                    .single()
+                if (error) throw error
+                if (data) {
+                    setTrainer(data as Trainer)
                     setAvailability(data.availability || {})
                 }
             } catch (error) {
@@ -54,22 +56,14 @@ function AvailabilityPage() {
     const handleSave = async () => {
         try {
             setMessage('Saving...')
-            const token = localStorage.getItem('adminToken')
-            const response = await fetch(`http://localhost:3005/api/trainers/${TRAINER_ID}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ availability })
-            })
+            const { error } = await supabase
+                .from('trainers')
+                .update({ availability })
+                .eq('id', TRAINER_ID)
 
-            if (response.ok) {
-                setMessage('Saved successfully!')
-                setTimeout(() => setMessage(''), 3000)
-            } else {
-                setMessage('Failed to save.')
-            }
+            if (error) throw error
+            setMessage('Saved successfully!')
+            setTimeout(() => setMessage(''), 3000)
         } catch (error) {
             console.error('Error saving availability', error)
             setMessage('Error saving.')

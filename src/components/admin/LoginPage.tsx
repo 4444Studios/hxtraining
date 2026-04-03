@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 import '../../App.css'
 
 function LoginPage() {
@@ -11,20 +12,16 @@ function LoginPage() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         try {
-            const response = await fetch('http://localhost:3005/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+            const { data, error: signInError } = await supabase.auth.signInWithPassword({
+                email: username,
+                password: password,
             })
-            const data = await response.json()
-            if (response.ok) {
-                localStorage.setItem('adminToken', data.token)
+            if (signInError) throw signInError
+            if (data.session) {
                 navigate('/admin/dashboard')
-            } else {
-                setError(data.error || 'Login failed')
             }
-        } catch (err) {
-            setError('Network error')
+        } catch (err: any) {
+            setError(err.message || 'Login failed')
         }
     }
 

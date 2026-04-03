@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
 
 interface Session {
     id: number;
@@ -17,13 +18,13 @@ function DashboardPage() {
     useEffect(() => {
         const fetchSessions = async () => {
             try {
-                const token = localStorage.getItem('adminToken')
-                const response = await fetch('http://localhost:3005/api/sessions', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-                if (response.ok) {
-                    const data = await response.json()
-                    setSessions(data)
+                const { data, error } = await supabase
+                    .from('sessions')
+                    .select('*, client:clients(name, email), trainer:trainers(name)')
+
+                if (error) throw error
+                if (data) {
+                    setSessions(data as any)
                 }
             } catch (error) {
                 console.error('Error fetching sessions', error)

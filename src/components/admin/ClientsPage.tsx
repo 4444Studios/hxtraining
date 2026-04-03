@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
 
 interface Client {
     id: number;
     name: string;
     email: string;
-    phoneNumber?: string;
+    phone_number?: string;
 }
 
 function ClientsPage() {
@@ -14,14 +15,9 @@ function ClientsPage() {
     useEffect(() => {
         const fetchClients = async () => {
             try {
-                const token = localStorage.getItem('adminToken')
-                const response = await fetch('http://localhost:3005/api/clients', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-                if (response.ok) {
-                    const data = await response.json()
-                    setClients(data)
-                }
+                const { data, error } = await supabase.from('clients').select('*')
+                if (error) throw error
+                if (data) setClients(data as Client[])
             } catch (error) {
                 console.error('Error fetching clients', error)
             } finally {
@@ -55,7 +51,7 @@ function ClientsPage() {
                                 <tr key={client.id} style={{ borderBottom: '1px solid #222' }}>
                                     <td style={{ padding: '1rem' }}>{client.name}</td>
                                     <td style={{ padding: '1rem' }}>{client.email}</td>
-                                    <td style={{ padding: '1rem' }}>{client.phoneNumber || '-'}</td>
+                                    <td style={{ padding: '1rem' }}>{client.phone_number || '-'}</td>
                                     <td style={{ padding: '1rem' }}>
                                         <a
                                             href={`mailto:${client.email}`}

@@ -6,9 +6,23 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/',
-  server: {
-    proxy: {
-      '/api': 'http://localhost:3005',
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react-dom') || id.includes('/react/') || id.includes('\\react\\')) {
+              return 'react-vendor'
+            }
+            if (id.includes('react-router')) {
+              return 'router'
+            }
+            if (id.includes('@supabase') || id.includes('date-fns') || id.includes('lucide-react')) {
+              return 'data-ui'
+            }
+          }
+        },
+      },
     },
   },
 })

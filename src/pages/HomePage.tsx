@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import emailjs from '@emailjs/browser'
 import trainerImage from '../assets/Trainer.png' // Adjusted path
 import trainerImage2 from '../assets/Trainer-2.JPEG' // Adjusted path
-import Booking from '../components/Booking' // Adjusted path
 import '../App.css' // Adjusted path
+
+const Booking = lazy(() => import('../components/Booking'))
 
 interface FormData {
   firstName: string;
@@ -26,7 +27,22 @@ interface FormErrors {
   [key: string]: string;
 }
 
+/** Shown on every full load / refresh; skipped only when user prefers reduced motion. */
+function shouldShowIntroSplash(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  } catch {
+    return false
+  }
+}
+
+const SPLASH_LOGO = 'HXTRAININGCLUB'
+
 function HomePage() {
+  const philosophySectionRef = useRef<HTMLElement>(null)
+  const philosophyBgRef = useRef<HTMLDivElement>(null)
+
   const [isScrolled, setIsScrolled] = useState<boolean>(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false)
   const [showFloatingCta, setShowFloatingCta] = useState<boolean>(false)
@@ -49,6 +65,35 @@ function HomePage() {
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitted, setSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [locationDetecting, setLocationDetecting] = useState(false)
+  const [locationHint, setLocationHint] = useState<string | null>(null)
+
+  const [splashActive, setSplashActive] = useState(shouldShowIntroSplash)
+  const [splashExiting, setSplashExiting] = useState(false)
+
+  useLayoutEffect(() => {
+    if (!splashActive) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [splashActive])
+
+  useEffect(() => {
+    if (!splashActive) return
+    const holdMs = 2200
+    const exitMs = 900
+    const t1 = window.setTimeout(() => setSplashExiting(true), holdMs)
+    const t2 = window.setTimeout(() => {
+      setSplashActive(false)
+      setSplashExiting(false)
+    }, holdMs + exitMs)
+    return () => {
+      window.clearTimeout(t1)
+      window.clearTimeout(t2)
+    }
+  }, [splashActive])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -109,48 +154,72 @@ function HomePage() {
     return () => clearTimeout(timeoutId)
   }, [formData])
 
+  const fillLocationFromCoordinates = useCallback(async (latitude: number, longitude: number) => {
+    const res = await fetch(
+      `https://photon.komoot.io/reverse?lat=${latitude}&lon=${longitude}`
+    )
+    if (!res.ok) throw new Error('Reverse geocode failed')
+    const data = await res.json()
+    const props = data.features?.[0]?.properties as
+      | { city?: string; locality?: string; state?: string; country?: string }
+      | undefined
+    if (!props) throw new Error('No address for this position')
+    const city = props.city || props.locality
+    const region = props.state || props.country
+    const line = [city, region].filter(Boolean).join(', ')
+    if (!line) throw new Error('Could not resolve city')
+    setFormData(prev => ({ ...prev, location: line }))
+    setLocationHint(null)
+  }, [])
+
+  const handleUseMyLocation = useCallback(() => {
+    setLocationHint(null)
+    if (!navigator.geolocation) {
+      setLocationHint('Location is not available in this browser. Please enter your city manually.')
+      return
+    }
+    setLocationDetecting(true)
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude, longitude } = pos.coords
+        void fillLocationFromCoordinates(latitude, longitude)
+          .catch(() => {
+            setLocationHint('Could not look up your city. Please type your location.')
+          })
+          .finally(() => {
+            setLocationDetecting(false)
+          })
+      },
+      () => {
+        setLocationDetecting(false)
+        setLocationHint(
+          'Location access was blocked or unavailable. Please enter your city below (works without GPS).'
+        )
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+    )
+  }, [fillLocationFromCoordinates])
+
   useEffect(() => {
-    // Autofill location based on IP
-    const fetchLocation = async () => {
-      try {
-        const response = await fetch('https://ipapi.co/json/')
-        const data = await response.json()
-        if (data.city && data.region) {
-          setFormData(prev => ({
-            ...prev,
-            location: `${data.city}, ${data.region}`
-          }))
-        }
-      } catch (error) {
-        console.log('Could not autofill location', error)
-      }
-    }
-
-    if (!formData.location) {
-      fetchLocation()
-    }
-
-    // Close mobile menu when clicking outside
     const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Element;
+      const target = e.target as Element
       if (isMobileMenuOpen && target && !target.closest('.nav-container')) {
         setIsMobileMenuOpen(false)
       }
     }
 
-    // Close mobile menu on escape key
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isMobileMenuOpen) {
         setIsMobileMenuOpen(false)
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside as any)
-    document.addEventListener('keydown', handleEscape as any)
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside as any)
-      document.removeEventListener('keydown', handleEscape as any)
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
     }
   }, [isMobileMenuOpen])
 
@@ -173,6 +242,51 @@ function HomePage() {
 
     return () => {
       hiddenElements.forEach((el) => observer.unobserve(el))
+    }
+  }, [])
+
+  /** iOS/Safari often ignore background-attachment:fixed; mimic desktop parallax on narrow viewports. */
+  useEffect(() => {
+    const section = philosophySectionRef.current
+    const bg = philosophyBgRef.current
+    if (!section || !bg) return
+
+    const mobileQuery = '(max-width: 768px)'
+    const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    let raf = 0
+
+    const updateParallax = () => {
+      if (!window.matchMedia(mobileQuery).matches || reduceMotion()) {
+        bg.style.transform = ''
+        return
+      }
+      const rect = section.getBoundingClientRect()
+      const vh = window.innerHeight || 1
+      const centerOffset = rect.top + rect.height / 2 - vh / 2
+      const y = centerOffset * -0.22
+      bg.style.transform = `translate3d(0, ${y}px, 0)`
+    }
+
+    const schedule = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(updateParallax)
+    }
+
+    const mq = window.matchMedia(mobileQuery)
+    const onMqChange = () => schedule()
+
+    schedule()
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    mq.addEventListener('change', onMqChange)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+      mq.removeEventListener('change', onMqChange)
+      bg.style.transform = ''
     }
   }, [])
 
@@ -384,10 +498,41 @@ function HomePage() {
 
   return (
     <div className="app">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
+      {splashActive && (
+        <div
+          className={`splash-intro ${splashExiting ? 'splash-intro--exit' : ''}`}
+          aria-hidden="true"
+        >
+          <div className="splash-intro__curtain" />
+          <div className="splash-intro__grain" aria-hidden="true" />
+          <div className="splash-intro__inner">
+            <p className="splash-intro__kicker">Elite lifestyle training</p>
+            <div className="splash-intro__brand" aria-label={SPLASH_LOGO}>
+              {SPLASH_LOGO.split('').map((char, i) => (
+                <span
+                  key={`${char}-${i}`}
+                  className="splash-intro__char"
+                  style={{ animationDelay: `${0.06 + i * 0.028}s` }}
+                >
+                  {char}
+                </span>
+              ))}
+            </div>
+            <div className="splash-intro__rule" />
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
         <div className="nav-container">
-          <div className="logo">HxTraining</div>
+          <a href="#" className="logo" onClick={() => setIsMobileMenuOpen(false)}>
+            HxTraining
+          </a>
           <button
             className={`mobile-menu-toggle ${isMobileMenuOpen ? 'active' : ''}`}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -417,9 +562,12 @@ function HomePage() {
         </div>
       </nav>
 
+      <main id="main-content">
       {/* Hero Section */}
       <section className="hero">
+        <div className="hero-bg" aria-hidden="true" />
         <div className="hero-content">
+          <p className="hero-eyebrow">Private coaching · Results-driven</p>
           <h1 className="hero-title">
             <span className="line">Transform</span>
             <span className="line">Your Body</span>
@@ -427,9 +575,15 @@ function HomePage() {
             <span className="line">Your Life.</span>
           </h1>
           <p className="hero-subtitle">Personalized Coaching & Transformation</p>
-          <a href="#contact" className="cta-button">Begin Your Journey</a>
+          <a href="#contact" className="cta-button">
+            <span className="cta-button-inner">Begin Your Journey</span>
+          </a>
         </div>
-        <div className="hero-overlay"></div>
+        <div className="hero-overlay" />
+        <a href="#about" className="hero-scroll-hint" aria-label="Scroll to about">
+          <span className="hero-scroll-line" aria-hidden="true" />
+          <span className="hero-scroll-label">Discover</span>
+        </a>
       </section>
 
       {/* About Section */}
@@ -445,7 +599,14 @@ function HomePage() {
               </p>
             </div>
             <div className="about-image-wrapper reveal-right">
-              <img src={trainerImage} alt="Trainer" className="about-image" />
+              <img
+                src={trainerImage}
+                alt="Trainer"
+                className="about-image"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
+              />
             </div>
           </div>
         </div>
@@ -474,8 +635,14 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Philosophy Section */}
-      <section className="philosophy" style={{ backgroundImage: `url(${trainerImage2})` }}>
+      {/* Philosophy Section — bg layer: fixed on desktop; scroll-parallax on mobile */}
+      <section ref={philosophySectionRef} className="philosophy">
+        <div
+          ref={philosophyBgRef}
+          className="philosophy-bg"
+          style={{ backgroundImage: `url(${trainerImage2})` }}
+          aria-hidden="true"
+        />
         <div className="philosophy-content">
           <div className="philosophy-text reveal-scale">
             <h2>ELITE</h2>
@@ -485,8 +652,18 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Booking Section */}
-      <Booking />
+      {/* Booking Section — lazy-loaded to speed up initial home page */}
+      <Suspense
+        fallback={
+          <section className="booking-section booking-section-loading" aria-busy="true">
+            <div className="section-container">
+              <p className="booking-loading-text">Loading scheduler…</p>
+            </div>
+          </section>
+        }
+      >
+        <Booking />
+      </Suspense>
 
       {/* Contact Section */}
       <section id="contact" className="contact">
@@ -541,15 +718,31 @@ function HomePage() {
                   <label htmlFor="location">
                     Where are you located? <span className="required">*</span>
                   </label>
+                  <span className="sub-label">
+                    Enter your city or use your device location (optional — requires permission on iPhone).
+                  </span>
                   <input
                     type="text"
                     id="location"
                     name="location"
                     placeholder="City, State or Country"
                     value={formData.location}
-                    onChange={handleInputChange}
+                    onChange={e => {
+                      setLocationHint(null)
+                      handleInputChange(e)
+                    }}
                     className={errors.location ? 'error' : ''}
+                    autoComplete="address-level2"
                   />
+                  <button
+                    type="button"
+                    className="location-detect-button"
+                    onClick={handleUseMyLocation}
+                    disabled={locationDetecting}
+                  >
+                    {locationDetecting ? 'Detecting…' : 'Use my current location'}
+                  </button>
+                  {locationHint && <span className="sub-label location-hint">{locationHint}</span>}
                   {errors.location && <span className="error-message">{errors.location}</span>}
                 </div>
 
@@ -768,6 +961,7 @@ function HomePage() {
       >
         Start Your Journey →
       </a>
+      </main>
 
       {/* Footer */}
       <footer className="footer">
