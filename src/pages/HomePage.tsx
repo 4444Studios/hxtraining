@@ -82,7 +82,7 @@ function HomePage() {
 
   useEffect(() => {
     if (!splashActive) return
-    const holdMs = 2200
+    const holdMs = 1400
     const exitMs = 900
     const t1 = window.setTimeout(() => setSplashExiting(true), holdMs)
     const t2 = window.setTimeout(() => {
