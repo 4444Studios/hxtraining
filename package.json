@@ -3,6 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/4444Studios/hxtraining.git"
+  },
+  "homepage": "https://hxtrainingclub.com/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
