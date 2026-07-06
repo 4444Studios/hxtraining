@@ -110,29 +110,24 @@ This project is configured to deploy to GitHub Pages using the `gh-pages` packag
 
 **To deploy:**
 
-1. Make sure your repository is initialized and connected to GitHub:
+1. Clone from the org repo:
    ```bash
-   git init
-   git remote add origin https://github.com/yourusername/your-repo-name.git
+   git clone git@github.com:4444Studios/hxtraining.git
    ```
 
 2. Build and deploy:
    ```bash
-   npm run deploy
+   pnpm run deploy
    ```
 
-3. Configure GitHub Pages:
-   - Go to your repository on GitHub
-   - Navigate to Settings > Pages
-   - Under "Source", select the `gh-pages` branch
-   - Under "Custom domain", enter `hxtrainingclub.com`
-   - Check "Enforce HTTPS" (after DNS is configured)
-   - Click Save
+3. Configure GitHub Pages (repo: **4444Studios/hxtraining**):
+   - Settings → Pages → Source: `gh-pages` branch
+   - Custom domain: `hxtrainingclub.com`
+   - Enforce HTTPS
 
-4. Configure DNS:
-   - Add a CNAME record pointing `hxtrainingclub.com` to `yourusername.github.io`
-   - Add a CNAME record pointing `www.hxtrainingclub.com` to `yourusername.github.io` (optional)
-   - Wait for DNS propagation (can take up to 24 hours)
+4. Configure DNS (if using CNAME):
+   - Point `hxtrainingclub.com` at `4444studios.github.io`
+   - Or use GitHub Pages A records (`185.199.x.x`)
 
 5. Your site will be available at: `https://hxtrainingclub.com`
 
