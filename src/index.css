@@ -7,15 +7,15 @@
 }
 
 :root {
-  /* Luxury palette — warm neutrals + champagne gold */
+  /* Luxury palette — deep black + warm off-white accents */
   --hx-bg: #050505;
   --hx-surface: #0c0c0c;
   --hx-elevated: #121212;
-  --hx-gold: #c9a962;
-  --hx-gold-bright: #e8d5a3;
-  --hx-gold-muted: rgba(201, 169, 98, 0.45);
+  --hx-accent: rgba(255, 255, 255, 0.72);
+  --hx-accent-bright: #faf8f4;
+  --hx-accent-muted: rgba(255, 255, 255, 0.45);
   --hx-border-subtle: rgba(255, 255, 255, 0.08);
-  --hx-glow: rgba(201, 169, 98, 0.15);
+  --hx-glow: rgba(255, 255, 255, 0.12);
   --hx-nav-h: 5.5rem;
 
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

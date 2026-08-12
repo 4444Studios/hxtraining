@@ -106,32 +106,39 @@ npm run build
 
 ### Deploying to GitHub Pages
 
-This project is configured to deploy to GitHub Pages using the `gh-pages` package and is set up for the custom domain `hxtrainingclub.com`.
+Production deploys from **committed source on `main`** via GitHub Actions (not from a local dirty tree). The workflow builds with Vite, then publishes `dist/` to the `gh-pages` branch for `hxtrainingclub.com`.
 
-**To deploy:**
+**Normal deploy:**
 
-1. Clone from the org repo:
+1. Commit your source changes
+2. Push to `main`:
    ```bash
-   git clone git@github.com:4444Studios/hxtraining.git
+   git push origin main
    ```
+3. GitHub Actions runs **Deploy to GitHub Pages** and updates the live site
 
-2. Build and deploy:
-   ```bash
-   pnpm run deploy
-   ```
+**Required repo secrets** (Settings → Secrets and variables → Actions):
 
-3. Configure GitHub Pages (repo: **4444Studios/hxtraining**):
-   - Settings → Pages → Source: `gh-pages` branch
-   - Custom domain: `hxtrainingclub.com`
-   - Enforce HTTPS
+- `VITE_EMAILJS_SERVICE_ID`
+- `VITE_EMAILJS_TEMPLATE_ID`
+- `VITE_EMAILJS_PUBLIC_KEY`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_SHEETDB_URL` (optional)
 
-4. Configure DNS (if using CNAME):
-   - Point `hxtrainingclub.com` at `4444studios.github.io`
-   - Or use GitHub Pages A records (`185.199.x.x`)
+**Pages settings** (repo: **4444Studios/hxtraining**):
 
-5. Your site will be available at: `https://hxtrainingclub.com`
+- Source: `gh-pages` branch
+- Custom domain: `hxtrainingclub.com`
+- Enforce HTTPS
 
-**Note:** The `base` path in `vite.config.js` is set to `/` for custom domain usage.
+**Emergency local deploy only** (requires a clean git working tree):
+
+```bash
+pnpm run deploy:local
+```
+
+**Note:** The `base` path in `vite.config.ts` is set to `/` for custom domain usage.
 
 ## Environment Variables
 

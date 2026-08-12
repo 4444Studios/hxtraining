@@ -13,7 +13,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "npm run build && gh-pages -d dist"
+    "deploy": "node scripts/deploy-local.mjs",
+    "deploy:local": "node scripts/deploy-local.mjs"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
