@@ -17,7 +17,7 @@ export default defineConfig({
             if (id.includes('react-router')) {
               return 'router'
             }
-            if (id.includes('@supabase') || id.includes('date-fns') || id.includes('lucide-react')) {
+            if (id.includes('lucide-react')) {
               return 'data-ui'
             }
           }

@@ -1,10 +1,8 @@
-import { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import trainerImage from '../assets/Trainer.png' // Adjusted path
 import trainerImage2 from '../assets/Trainer-2.JPEG' // Adjusted path
 import '../App.css' // Adjusted path
 import ContactApplicationForm from '../components/ContactApplicationForm'
-
-const Booking = lazy(() => import('../components/Booking'))
 
 /** Shown on every full load / refresh; skipped only when user prefers reduced motion. */
 function shouldShowIntroSplash(): boolean {
@@ -316,19 +314,6 @@ function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Booking Section — lazy-loaded to speed up initial home page */}
-      <Suspense
-        fallback={
-          <section className="booking-section booking-section-loading" aria-busy="true">
-            <div className="section-container">
-              <p className="booking-loading-text">Loading scheduler…</p>
-            </div>
-          </section>
-        }
-      >
-        <Booking />
-      </Suspense>
 
       {/* Contact Section */}
       <section id="contact" className="contact">

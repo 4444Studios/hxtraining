@@ -122,9 +122,9 @@ Production deploys from **committed source on `main`** via GitHub Actions (not f
 - `VITE_EMAILJS_SERVICE_ID`
 - `VITE_EMAILJS_TEMPLATE_ID`
 - `VITE_EMAILJS_PUBLIC_KEY`
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
 - `VITE_SHEETDB_URL` (optional)
+
+Booking/admin (Supabase) is maintained on the `Database` branch, not on `main`.
 
 **Pages settings** (repo: **4444Studios/hxtraining**):
 
