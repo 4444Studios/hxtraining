@@ -4,98 +4,24 @@ import { useIsMobile } from '../hooks/useIsMobile'
 import { reverseGeocode } from '../lib/reverseGeocode'
 import ContactFormDesktop from './contact/ContactFormDesktop'
 import ContactFormWizard from './contact/ContactFormWizard'
+import {
+  EMPTY_FORM,
+  STEP_META,
+  TOTAL_STEPS,
+  buildFormErrors,
+  buildStepErrors,
+  getDefaultStartDate,
+  getFirstInvalidWizardStep,
+  hasFormContent,
+  type FormData,
+  type FormErrors,
+} from './contact/formConfig'
 
-
-export interface FormData {
-  firstName: string
-  lastName: string
-  location: string
-  phoneNumber: string
-  instagramHandle: string
-  fitnessGoal: string
-  pastAttempts: string
-  medicalConditions: string
-  commitment: string
-  availableDays: string[]
-  daysPerWeek: string
-  startDate: string
-  services: string[]
-  reason: string
-}
-
-export interface FormErrors {
-  [key: string]: string
-}
+export type { FormData, FormErrors }
 
 interface SavedFormPayload {
   formData: FormData
   currentStep?: number
-}
-
-const TOTAL_STEPS = 4
-
-const STEP_META = [
-  { title: 'About you', helper: 'Tell us who you are' },
-  { title: 'Your goals', helper: 'Help us understand your journey' },
-  { title: 'Training plan', helper: 'Schedule and commitment' },
-  { title: 'Services', helper: 'Almost done' },
-] as const
-
-/** Maps validation field keys to wizard step (step 2 has no required fields). */
-const FIELD_TO_WIZARD_STEP: Record<string, number> = {
-  firstName: 1,
-  lastName: 1,
-  location: 1,
-  phoneNumber: 1,
-  commitment: 3,
-  availableDays: 3,
-  daysPerWeek: 3,
-  startDate: 3,
-  services: 4,
-}
-
-function getFirstInvalidWizardStep(fieldErrors: FormErrors): number | null {
-  const steps = Object.keys(fieldErrors)
-    .map(key => FIELD_TO_WIZARD_STEP[key])
-    .filter((step): step is number => step != null)
-  return steps.length > 0 ? Math.min(...steps) : null
-}
-
-const EMPTY_FORM: FormData = {
-  firstName: '',
-  lastName: '',
-  location: '',
-  phoneNumber: '',
-  instagramHandle: '',
-  fitnessGoal: '',
-  pastAttempts: '',
-  medicalConditions: '',
-  commitment: '',
-  availableDays: [],
-  daysPerWeek: '',
-  startDate: '',
-  services: [],
-  reason: '',
-}
-
-function getDefaultStartDate(): string {
-  const today = new Date()
-  const dayOfWeek = today.getDay()
-  const daysUntilMonday = (8 - dayOfWeek) % 7 || 7
-  const nextMonday = new Date(today)
-  nextMonday.setDate(today.getDate() + daysUntilMonday)
-  return nextMonday.toISOString().split('T')[0]
-}
-
-function hasFormContent(data: FormData): boolean {
-  return Boolean(
-    data.firstName ||
-      data.lastName ||
-      data.phoneNumber ||
-      data.location ||
-      data.services.length > 0 ||
-      data.availableDays.length > 0
-  )
 }
 
 function parseSavedForm(raw: string): { formData: FormData; currentStep: number } | null {
@@ -177,11 +103,12 @@ export default function ContactApplicationForm() {
   }, [wizardOpen, currentStep])
 
   useEffect(() => {
-    if (!isMobile) return
+    if (!isMobile || wizardOpen || submitted) return
+    if (window.location.hash === '#contact') {
+      setWizardOpen(true)
+    }
     const onHashChange = () => {
-      if (window.location.hash === '#contact' && !wizardOpen && !submitted) {
-        setWizardOpen(true)
-      }
+      if (window.location.hash === '#contact') setWizardOpen(true)
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
@@ -292,40 +219,9 @@ export default function ContactApplicationForm() {
   }
 
   const validateStep = (step: number): boolean => {
-    const newErrors: FormErrors = {}
-
-    if (step === 1) {
-      if (!formData.firstName.trim()) newErrors.firstName = 'First name is required'
-      if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required'
-      if (!formData.location.trim()) newErrors.location = 'Location is required'
-      if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required'
-    } else if (step === 3) {
-      if (!formData.commitment) newErrors.commitment = 'Please confirm your commitment'
-      if (formData.availableDays.length === 0) {
-        newErrors.availableDays = 'Please select at least one day'
-      }
-      if (!formData.daysPerWeek) newErrors.daysPerWeek = 'Please select days per week'
-      if (!formData.startDate) newErrors.startDate = 'Please select a start date'
-    } else if (step === 4) {
-      if (formData.services.length === 0) newErrors.services = 'Please select at least one service'
-    }
-
+    const newErrors = buildStepErrors(formData, step)
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }
-
-  const buildFormErrors = (): FormErrors => {
-    const newErrors: FormErrors = {}
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required'
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required'
-    if (!formData.location.trim()) newErrors.location = 'Location is required'
-    if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone Number is required'
-    if (!formData.commitment) newErrors.commitment = 'Please confirm your commitment'
-    if (formData.availableDays.length === 0) newErrors.availableDays = 'Please select at least one day'
-    if (!formData.daysPerWeek) newErrors.daysPerWeek = 'Please select days per week'
-    if (!formData.startDate) newErrors.startDate = 'Please select a start date'
-    if (formData.services.length === 0) newErrors.services = 'Please select at least one service'
-    return newErrors
   }
 
   const applyValidationErrors = (newErrors: FormErrors): boolean => {
@@ -348,7 +244,8 @@ export default function ContactApplicationForm() {
 
   const scrollToFirstError = () => {
     requestAnimationFrame(() => {
-      panelRef.current?.querySelector('.error-message')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      const root = isMobile && wizardOpen ? panelRef.current : document
+      root?.querySelector('.error-message')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     })
   }
 
@@ -362,12 +259,7 @@ export default function ContactApplicationForm() {
     e?.preventDefault()
     setSubmitError(null)
 
-    if (isMobile && wizardOpen && currentStep === TOTAL_STEPS && !validateStep(4)) {
-      scrollToFirstError()
-      return
-    }
-
-    if (!applyValidationErrors(buildFormErrors())) {
+    if (!applyValidationErrors(buildFormErrors(formData))) {
       scrollToFirstError()
       return
     }
@@ -385,8 +277,6 @@ export default function ContactApplicationForm() {
     setIsSubmitting(true)
 
     try {
-      emailjs.init({ publicKey })
-
       const templateParams = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -490,12 +380,13 @@ export default function ContactApplicationForm() {
 
   const closeWizard = useCallback(() => {
     if (hasFormContent(formData)) {
-      const ok = window.confirm('Discard your application progress?')
+      const ok = window.confirm('Close? Your progress is saved.')
       if (!ok) return
     }
     setWizardOpen(false)
     setCurrentStep(1)
     setErrors({})
+    setSubmitError(null)
   }, [formData])
 
   useEffect(() => {
@@ -529,6 +420,7 @@ export default function ContactApplicationForm() {
     locationDetecting,
     locationHint,
     isSubmitting,
+    submitError,
     onChange: handleInputChange,
     onLocationDetect: handleUseMyLocation,
     onClearLocationHint: () => setLocationHint(null),

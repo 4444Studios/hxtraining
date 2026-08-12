@@ -15,7 +15,7 @@ A modern, minimalist website for HxTraining virtual coaching services, built wit
 ### Installation
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### EmailJS Configuration
@@ -101,7 +101,7 @@ npm run dev
 ### Building for Production
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 ### Deploying to GitHub Pages
@@ -123,8 +123,6 @@ Production deploys from **committed source on `main`** via GitHub Actions (not f
 - `VITE_EMAILJS_TEMPLATE_ID`
 - `VITE_EMAILJS_PUBLIC_KEY`
 - `VITE_SHEETDB_URL` (optional)
-
-Booking/admin (Supabase) is maintained on the `Database` branch, not on `main`.
 
 **Pages settings** (repo: **4444Studios/hxtraining**):
 

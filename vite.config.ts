@@ -14,12 +14,6 @@ export default defineConfig({
             if (id.includes('react-dom') || id.includes('/react/') || id.includes('\\react\\')) {
               return 'react-vendor'
             }
-            if (id.includes('react-router')) {
-              return 'router'
-            }
-            if (id.includes('lucide-react')) {
-              return 'data-ui'
-            }
           }
         },
       },

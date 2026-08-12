@@ -1,7 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
-import trainerImage from '../assets/Trainer.png' // Adjusted path
-import trainerImage2 from '../assets/Trainer-2.JPEG' // Adjusted path
-import '../App.css' // Adjusted path
+import trainerImage from '../assets/Trainer.webp'
+import trainerImage2 from '../assets/Trainer-2.webp'
 import ContactApplicationForm from '../components/ContactApplicationForm'
 
 /** Shown on every full load / refresh; skipped only when user prefers reduced motion. */
