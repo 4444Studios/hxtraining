@@ -3,7 +3,6 @@ import img7462 from '../assets/attachments/IMG_7462.webp'
 import img7463 from '../assets/attachments/IMG_7463.webp'
 import img7464 from '../assets/attachments/IMG_7464.webp'
 import img7465 from '../assets/attachments/IMG_7465.webp'
-import img7466 from '../assets/attachments/IMG_7466.webp'
 import img7467 from '../assets/attachments/IMG_7467.webp'
 import img7468 from '../assets/attachments/IMG_7468.webp'
 import img7469 from '../assets/attachments/IMG_7469.webp'
@@ -14,7 +13,6 @@ const SLIDE_SRCS = [
   img7463,
   img7464,
   img7465,
-  img7466,
   img7467,
   img7468,
   img7469,
