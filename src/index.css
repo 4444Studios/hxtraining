@@ -2,6 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 :root {
@@ -15,6 +16,8 @@
   --hx-border-subtle: rgba(255, 255, 255, 0.08);
   --hx-glow: rgba(255, 255, 255, 0.12);
   --hx-nav-h: 5.5rem;
+  --track-label: 0.35em;
+  --track-body: 0.005em;
 
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',

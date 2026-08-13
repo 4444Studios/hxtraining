@@ -37,7 +37,7 @@ function HomePage() {
 
   useEffect(() => {
     if (!splashActive) return
-    const holdMs = 1400
+    const holdMs = typeof window !== 'undefined' && window.innerWidth <= 768 ? 900 : 1400
     const exitMs = 900
     const t1 = window.setTimeout(() => setSplashExiting(true), holdMs)
     const t2 = window.setTimeout(() => {
@@ -94,7 +94,7 @@ function HomePage() {
   useEffect(() => {
     const observerOptions = {
       threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
+      rootMargin: '0px 0px -20px 0px'
     }
 
     const observer = new IntersectionObserver((entries) => {
@@ -211,6 +211,13 @@ function HomePage() {
             ></div>
           )}
           <div className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+            <button
+              className="mobile-nav-close"
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-label="Close menu"
+            >
+              ×
+            </button>
             <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>About</a>
             <a href="#services" onClick={() => setIsMobileMenuOpen(false)}>Services</a>
             <a href="#contact" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
@@ -227,7 +234,13 @@ function HomePage() {
       <main id="main-content">
       {/* Hero Section */}
       <section className="hero">
-        <div className="hero-bg" aria-hidden="true" />
+        <div
+          className="hero-bg"
+          aria-hidden="true"
+          style={{ backgroundImage: `url(${trainerImage2})` }}
+        />
+        <div className="hero-overlay" aria-hidden="true" />
+        <div className="hero-grain" aria-hidden="true" />
         <div className="hero-content">
           <p className="hero-eyebrow">Private coaching · Results-driven</p>
           <h1 className="hero-title">
@@ -241,18 +254,29 @@ function HomePage() {
             <span className="cta-button-inner">Begin Your Journey</span>
           </a>
         </div>
-        <div className="hero-overlay" />
         <a href="#about" className="hero-scroll-hint" aria-label="Scroll to about">
           <span className="hero-scroll-line" aria-hidden="true" />
           <span className="hero-scroll-label">Discover</span>
         </a>
       </section>
 
+      {/* Marquee ticker */}
+      <div className="marquee" aria-hidden="true">
+        <div className="marquee__track">
+          {['Private Coaching', 'Results-Driven', 'Elite Lifestyle Training', 'Custom Programming', 'Direct Coach Access', 'Private Coaching', 'Results-Driven', 'Elite Lifestyle Training', 'Custom Programming', 'Direct Coach Access'].map((item, i) => (
+            <span key={i} className="marquee__item">
+              {item}<span className="marquee__dot"> ·</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
       {/* About Section */}
       <section id="about" className="about">
         <div className="section-container">
           <div className="about-wrapper">
             <div className="about-text reveal-left">
+              <p className="section-eyebrow">Coaching</p>
               <h2 className="section-title">About</h2>
               <p className="large-text">
                 <span className="inline-logo">HxTraining</span> delivers personalized coaching designed for results. Every program is crafted around your goals,
@@ -278,6 +302,7 @@ function HomePage() {
       <section id="services" className="services">
         <div className="section-container">
           <div className="section-header reveal">
+            <p className="section-eyebrow">Offerings</p>
             <h2 className="section-title">Services</h2>
           </div>
           <div className="services-grid">
@@ -318,9 +343,10 @@ function HomePage() {
       <section id="contact" className="contact">
         <div className="section-container">
           <div className="contact-content reveal">
+            <p className="section-eyebrow">Apply</p>
             <h2 className="section-title">Get Started</h2>
             <p className="contact-description">
-              Ready to begin your transformation? Fill out the form below and let's discuss how we can help you achieve your goals through personalized online coaching.
+              Applications are reviewed personally. Tell us about your goals and we'll be in touch to discuss what's possible for you.
             </p>
 
             <ContactApplicationForm />

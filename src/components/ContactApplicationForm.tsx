@@ -379,15 +379,11 @@ export default function ContactApplicationForm() {
   }
 
   const closeWizard = useCallback(() => {
-    if (hasFormContent(formData)) {
-      const ok = window.confirm('Close? Your progress is saved.')
-      if (!ok) return
-    }
     setWizardOpen(false)
     setCurrentStep(1)
     setErrors({})
     setSubmitError(null)
-  }, [formData])
+  }, [])
 
   useEffect(() => {
     if (!wizardOpen) return
