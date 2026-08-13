@@ -39,6 +39,7 @@ function ResultsCarousel() {
   const [reduceMotion, setReduceMotion] = useState(false)
   const [paused, setPaused] = useState(false)
   const [tabHidden, setTabHidden] = useState(false)
+  const [inView, setInView] = useState(false)
   const [timerEpoch, setTimerEpoch] = useState(0)
   /** Only mount slides that have been shown or are next — keeps DOM/network light. */
   const [mounted, setMounted] = useState(() => new Set([0, 1]))
@@ -63,6 +64,18 @@ function ResultsCarousel() {
   }, [])
 
   useEffect(() => {
+    const el = rootRef.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(Boolean(entry?.isIntersecting)),
+      { threshold: 0 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
     setMounted((prev) => {
       const next = new Set(prev)
       next.add(index)
@@ -78,10 +91,10 @@ function ResultsCarousel() {
   }
 
   useEffect(() => {
-    if (reduceMotion || paused || tabHidden) return
+    if (reduceMotion || paused || tabHidden || !inView) return
     const id = window.setTimeout(() => setIndex((i) => wrapIndex(i + 1)), AUTOPLAY_MS)
     return () => window.clearTimeout(id)
-  }, [index, reduceMotion, paused, tabHidden, timerEpoch])
+  }, [index, reduceMotion, paused, tabHidden, inView, timerEpoch])
 
   useEffect(() => {
     const el = rootRef.current
