@@ -2,6 +2,7 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import trainerImage from '../assets/Trainer.webp'
 import trainerImage2 from '../assets/Trainer-2.webp'
 import ContactApplicationForm from '../components/ContactApplicationForm'
+import ResultsCarousel from '../components/ResultsCarousel'
 
 /** Shown on every full load / refresh; skipped only when user prefers reduced motion. */
 function shouldShowIntroSplash(): boolean {
@@ -219,6 +220,7 @@ function HomePage() {
               ×
             </button>
             <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>About</a>
+            <a href="#results" onClick={() => setIsMobileMenuOpen(false)}>Results</a>
             <a href="#services" onClick={() => setIsMobileMenuOpen(false)}>Services</a>
             <a href="#contact" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
             <a href="https://www.instagram.com/hxtraining_/?hl=en" target="_blank" rel="noopener noreferrer" className="instagram-link" onClick={() => setIsMobileMenuOpen(false)}>
@@ -294,6 +296,18 @@ function HomePage() {
                 fetchPriority="low"
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Results Section */}
+      <section id="results" className="results">
+        <div className="section-container">
+          <div className="section-header reveal">
+            <h2 className="section-eyebrow results-eyebrow">Results</h2>
+          </div>
+          <div className="reveal delay-100">
+            <ResultsCarousel />
           </div>
         </div>
       </section>
