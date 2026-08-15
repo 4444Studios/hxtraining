@@ -176,7 +176,7 @@ export default function ContactFormWizard(props: ContactFormWizardProps) {
               {errors.phoneNumber && <span className="error-message">{errors.phoneNumber}</span>}
             </div>
             <div className="form-group">
-              <label htmlFor="wizard-instagram">Instagram <span className="optional">(optional)</span></label>
+              <label htmlFor="wizard-instagram">Instagram <span className="required">*</span></label>
               <input
                 type="text"
                 id="wizard-instagram"
@@ -184,7 +184,9 @@ export default function ContactFormWizard(props: ContactFormWizardProps) {
                 placeholder="@username"
                 value={formData.instagramHandle}
                 onChange={onChange}
+                className={errors.instagramHandle ? 'error' : ''}
               />
+              {errors.instagramHandle && <span className="error-message">{errors.instagramHandle}</span>}
             </div>
           </>
         )

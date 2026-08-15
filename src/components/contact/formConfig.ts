@@ -47,6 +47,7 @@ const FIELD_TO_WIZARD_STEP: Record<string, number> = {
   lastName: 1,
   location: 1,
   phoneNumber: 1,
+  instagramHandle: 1,
   commitment: 3,
   availableDays: 3,
   daysPerWeek: 3,
@@ -104,6 +105,7 @@ function errorsForStep1(data: FormData): FormErrors {
   if (!data.lastName.trim()) errors.lastName = 'Last name is required'
   if (!data.location.trim()) errors.location = 'Location is required'
   if (!data.phoneNumber.trim()) errors.phoneNumber = 'Phone number is required'
+  if (!data.instagramHandle.trim()) errors.instagramHandle = 'Instagram handle is required'
   return errors
 }
 

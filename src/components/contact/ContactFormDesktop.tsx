@@ -115,7 +115,7 @@ export default function ContactFormDesktop({
 
         <div className="form-group">
           <label htmlFor="instagramHandle">
-            Instagram Handle <span className="optional">(Optional)</span>
+            Instagram Handle <span className="required">*</span>
           </label>
           <input
             type="text"
@@ -124,7 +124,9 @@ export default function ContactFormDesktop({
             placeholder="@username"
             value={formData.instagramHandle}
             onChange={onChange}
+            className={errors.instagramHandle ? 'error' : ''}
           />
+          {errors.instagramHandle && <span className="error-message">{errors.instagramHandle}</span>}
         </div>
       </div>
 
