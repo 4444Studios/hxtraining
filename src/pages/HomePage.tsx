@@ -1,6 +1,9 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
-import trainerImage from '../assets/Trainer.webp'
-import trainerImage2 from '../assets/Trainer-2.webp'
+import aboutImage from '../assets/image1.webp'
+import heroImage from '../assets/Trainer-2.webp'
+import philosophyImage from '../assets/image2.webp'
+import hxLogo from '../assets/hx-logo.png'
+import hxMark from '../assets/hx-mark.png'
 import ContactApplicationForm from '../components/ContactApplicationForm'
 import ResultsCarousel from '../components/ResultsCarousel'
 
@@ -13,8 +16,6 @@ function shouldShowIntroSplash(): boolean {
     return false
   }
 }
-
-const SPLASH_LOGO = 'HXTRAININGCLUB'
 
 function HomePage() {
   const philosophySectionRef = useRef<HTMLElement>(null)
@@ -38,7 +39,7 @@ function HomePage() {
 
   useEffect(() => {
     if (!splashActive) return
-    const holdMs = typeof window !== 'undefined' && window.innerWidth <= 768 ? 900 : 1400
+    const holdMs = 2000
     const exitMs = 900
     const t1 = window.setTimeout(() => setSplashExiting(true), holdMs)
     const t2 = window.setTimeout(() => {
@@ -173,17 +174,14 @@ function HomePage() {
           <div className="splash-intro__curtain" />
           <div className="splash-intro__grain" aria-hidden="true" />
           <div className="splash-intro__inner">
-            <p className="splash-intro__kicker">Elite lifestyle training</p>
-            <div className="splash-intro__brand" aria-label={SPLASH_LOGO}>
-              {SPLASH_LOGO.split('').map((char, i) => (
-                <span
-                  key={`${char}-${i}`}
-                  className="splash-intro__char"
-                  style={{ animationDelay: `${0.06 + i * 0.028}s` }}
-                >
-                  {char}
-                </span>
-              ))}
+            <div className="splash-intro__brand">
+              <img
+                src={hxLogo}
+                alt=""
+                className="splash-intro__logo"
+                width={584}
+                height={750}
+              />
             </div>
             <div className="splash-intro__rule" />
           </div>
@@ -194,7 +192,7 @@ function HomePage() {
       <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
         <div className="nav-container">
           <a href="#" className="logo" onClick={() => setIsMobileMenuOpen(false)}>
-            HxTraining
+            <img src={hxMark} alt="hx TRAINING DEPT." width={468} height={439} />
           </a>
           <button
             className={`mobile-menu-toggle ${isMobileMenuOpen ? 'active' : ''}`}
@@ -239,7 +237,7 @@ function HomePage() {
         <div
           className="hero-bg"
           aria-hidden="true"
-          style={{ backgroundImage: `url(${trainerImage2})` }}
+          style={{ backgroundImage: `url(${heroImage})` }}
         />
         <div className="hero-overlay" aria-hidden="true" />
         <div className="hero-grain" aria-hidden="true" />
@@ -288,7 +286,7 @@ function HomePage() {
             </div>
             <div className="about-image-wrapper reveal-right">
               <img
-                src={trainerImage}
+                src={aboutImage}
                 alt="Trainer"
                 className="about-image"
                 loading="lazy"
@@ -341,7 +339,7 @@ function HomePage() {
         <div
           ref={philosophyBgRef}
           className="philosophy-bg"
-          style={{ backgroundImage: `url(${trainerImage2})` }}
+          style={{ backgroundImage: `url(${philosophyImage})` }}
           aria-hidden="true"
         />
         <div className="philosophy-content">
@@ -381,7 +379,9 @@ function HomePage() {
       {/* Footer */}
       <footer className="footer">
         <div className="footer-content">
-          <div className="footer-brand">HxTraining</div>
+          <div className="footer-brand">
+            <img src={hxMark} alt="hx TRAINING DEPT." width={468} height={439} />
+          </div>
           <div className="footer-links">
             <a href="https://www.instagram.com/hxtraining_/?hl=en" target="_blank" rel="noopener noreferrer">Instagram</a>
             <span>© 2026</span>

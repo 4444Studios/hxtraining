@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type TouchEvent } from 'react'
+import img0 from '../assets/attachments/image0.webp'
 import img7462 from '../assets/attachments/IMG_7462.webp'
 import img7463 from '../assets/attachments/IMG_7463.webp'
 import img7464 from '../assets/attachments/IMG_7464.webp'
@@ -9,6 +10,7 @@ import img7469 from '../assets/attachments/IMG_7469.webp'
 import img7472 from '../assets/attachments/IMG_7472.webp'
 
 const SLIDE_SRCS = [
+  img0,
   img7462,
   img7463,
   img7464,

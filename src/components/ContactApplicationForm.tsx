@@ -17,8 +17,6 @@ import {
   type FormErrors,
 } from './contact/formConfig'
 
-export type { FormData, FormErrors }
-
 interface SavedFormPayload {
   formData: FormData
   currentStep?: number
@@ -379,11 +377,15 @@ export default function ContactApplicationForm() {
   }
 
   const closeWizard = useCallback(() => {
+    if (hasFormContent(formData)) {
+      const ok = window.confirm('Discard your application progress?')
+      if (!ok) return
+    }
     setWizardOpen(false)
     setCurrentStep(1)
     setErrors({})
     setSubmitError(null)
-  }, [])
+  }, [formData])
 
   useEffect(() => {
     if (!wizardOpen) return
